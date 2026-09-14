@@ -1,14 +1,3 @@
-"""Analise de regressao linear multipla para preco de casas.
-
-O arquivo de dados deve ter tres colunas, nesta ordem:
-	tamanho_da_casa, numero_de_quartos, preco
-
-Exemplos:
-	python rmdemo.py --data data.csv
-	python rmdemo.py --data data.mat --save-dir figuras
-	python rmdemo.py --url https://exemplo/data.csv
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -39,6 +28,16 @@ def regmultipla(X: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 	beta, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
 	return beta
+
+
+def regressao_simples(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+	"""Calcula [intercepto, inclinacao] para uma regressao linear simples."""
+	x = np.asarray(x, dtype=float).reshape(-1)
+	y = np.asarray(y, dtype=float).reshape(-1)
+	if x.size != y.size or x.size < 2:
+		raise ValueError("x e y devem ter o mesmo tamanho e pelo menos duas observacoes.")
+	matriz = np.column_stack((np.ones(x.size), x))
+	return regmultipla(matriz, y)
 
 
 def _dataframe_from_array(values: np.ndarray) -> pd.DataFrame:
@@ -89,7 +88,7 @@ def carregar_dados(data_path: str | os.PathLike[str] | None = None,
 			raise ImportError(
 				"Para ler .mat, instale scipy: python -m pip install scipy"
 			) from exc
-		matrices = loadmat(path)
+		matrices = loadmat(path)    
 		candidates = [
 			value for value in matrices.values()
 			if isinstance(value, np.ndarray) and value.ndim == 2 and value.shape[1] >= 3
@@ -109,22 +108,21 @@ def criar_graficos(dados: pd.DataFrame, beta: np.ndarray,
 	quartos = dados["quartos"].to_numpy()
 	preco = dados["preco"].to_numpy()
 	r_tamanho, r_quartos = correlacoes
+	reg_tamanho = regressao_simples(tamanho, preco)
+	reg_quartos = regressao_simples(quartos, preco)
 
 	fig_2d, axes = plt.subplots(1, 2, figsize=(13, 5))
-	for axis, variable, label, correlation, coefficient in [
-		(axes[0], tamanho, "Tamanho da casa", r_tamanho, beta[1]),
-		(axes[1], quartos, "Numero de quartos", r_quartos, beta[2]),
+	for axis, variable, label, correlation, regression in [
+		(axes[0], tamanho, "Tamanho da casa", r_tamanho, reg_tamanho),
+		(axes[1], quartos, "Numero de quartos", r_quartos, reg_quartos),
 	]:
 		axis.scatter(variable, preco, color="royalblue", label="Dados")
 		line_x = np.linspace(variable.min(), variable.max(), 100)
-		if label.startswith("Tamanho"):
-			line_y = beta[0] + beta[1] * line_x + beta[2] * quartos.mean()
-		else:
-			line_y = beta[0] + beta[1] * tamanho.mean() + beta[2] * line_x
-		axis.plot(line_x, line_y, color="crimson", label="Regressao (outras vars. na media)")
+		line_y = regression[0] + regression[1] * line_x
+		axis.plot(line_x, line_y, color="crimson", label="Regressao linear simples")
 		axis.set_xlabel(label)
 		axis.set_ylabel("Preco")
-		axis.set_title(f"r = {correlation:.4f} | beta = {coefficient:.4f}")
+		axis.set_title(f"Correlacao com o preco: r = {correlation:.4f}")
 		axis.grid(alpha=0.25)
 		axis.legend()
 	fig_2d.tight_layout()
@@ -141,11 +139,23 @@ def criar_graficos(dados: pd.DataFrame, beta: np.ndarray,
 	axis_3d.set_xlabel("Tamanho da casa")
 	axis_3d.set_ylabel("Numero de quartos")
 	axis_3d.set_zlabel("Preco")
-	axis_3d.set_title(f"Regressao multipla: preco = {beta[0]:.2f} + "
-					  f"{beta[1]:.2f}*tamanho + {beta[2]:.2f}*quartos")
-	axis_3d.text2D(0.02, 0.95, f"r(tamanho, preco) = {r_tamanho:.4f}\n"
-								f"r(quartos, preco) = {r_quartos:.4f}",
-				   transform=axis_3d.transAxes)
+	axis_3d.set_title("Regressao linear multipla")
+	axis_3d.text2D(
+		0.03,
+		0.95,
+		"Correlacoes com o preco\n"
+		f"Tamanho da casa: r = {r_tamanho:.4f}\n"
+		f"Numero de quartos: r = {r_quartos:.4f}",
+		transform=axis_3d.transAxes,
+		va="top",
+		fontsize=10,
+		bbox={
+			"boxstyle": "round,pad=0.5",
+			"facecolor": "white",
+			"edgecolor": "slategray",
+			"alpha": 0.9,
+		},
+	)
 	axis_3d.legend()
 	axis_3d.view_init(elev=25, azim=-55)
 
@@ -178,6 +188,12 @@ def analisar(dados: pd.DataFrame, mostrar_graficos: bool = True,
 	print(beta)
 	print(f"Correlacao tamanho/preco: {correlacoes[0]:.6f}")
 	print(f"Correlacao quartos/preco: {correlacoes[1]:.6f}")
+	reg_tamanho = regressao_simples(dados["tamanho"], y)
+	reg_quartos = regressao_simples(dados["quartos"], y)
+	print(f"Regressao simples tamanho/preco: preco = {reg_tamanho[0]:.2f} + "
+	      f"{reg_tamanho[1]:.2f} * tamanho")
+	print(f"Regressao simples quartos/preco: preco = {reg_quartos[0]:.2f} + "
+	      f"{reg_quartos[1]:.2f} * quartos")
 
 	casa_teste = np.array([1.0, 1650.0, 3.0])
 	print(f"\nPreco estimado para 1650 e 3 quartos: {casa_teste @ beta:.2f}")
@@ -219,3 +235,60 @@ def main() -> None:
 
 if __name__ == "__main__":
 	main()
+
+# A) Qual arquivo foi utilizado e qual e o formato dos dados?
+
+# R Foi utilizado data (1).csv. Cada linha possui, nesta ordem:
+# tamanho da casa, numero de quartos e preco. A notacao cientifica original,
+# como 3.999e+05, equivale a 399900 e foi normalizada no CSV.
+#
+# B) Qual a analise estatistica inicial da base?
+# O dataset possui 47 casas. A media dos precos e 340412.77, o menor
+# preco e 169900.00 e a casa mais cara possui 5 quartos.
+#
+# C) Como foram construidos X e y?
+# X possui uma coluna de 1 para o intercepto, uma coluna para o
+# tamanho e uma coluna para os quartos: X = [1, tamanho, quartos]. O vetor y
+# possui os precos das casas.
+#
+# D) Quais sao as correlacoes e regressoes simples?
+# A correlacao tamanho/preco e 0.854988 e a correlacao quartos/preco
+# e 0.442262. As regressões simples sao:
+# preco = 71270.57 + 134.53 * tamanho
+# preco = 110034.27 + 72669.73 * quartos
+# Os graficos 2D exibem essas regressões simples.
+#
+# E) Como foi calculada a regressao multipla?
+# A funcao regmultipla(X, y) calcula os coeficientes por minimos
+# quadrados. O resultado e beta = [89597.765961, 139.21063465,
+# -8737.91542019], na ordem [intercepto, tamanho, quartos].
+#
+# F) Como a regressao foi apresentada em tres dimensoes?
+# O grafico 3D mostra os pontos reais e o plano de regressao. A
+# equacao nao aparece no titulo para manter o grafico limpo; ela e impressa no
+# terminal e pode ser registrada no relatorio.
+#
+# G) Onde aparecem os coeficientes de correlacao?
+# Os valores r(tamanho, preco) = 0.854988 e r(quartos, preco) =
+# 0.442262 aparecem no quadro do grafico 3D e tambem no terminal.
+#
+# H) Qual o preco estimado para tamanho 1650 e 3 quartos? O que
+# acontece ao variar o numero de quartos?
+# O preco estimado para 1650 e 3 quartos e 293081.57. Mantendo o
+# tamanho em 1650, as previsoes para 2, 4 e 5 quartos sao 301819.48,
+# 284343.65 e 275605.74. Nesta amostra, beta_2 = -8737.92; portanto, o modelo
+# associa mais quartos a menor preco quando o tamanho e mantido constante.
+# Isso e uma associacao estatistica condicionada ao tamanho, nao uma regra
+# causal sobre o valor real das casas.
+#
+# I) O resultado foi comparado com uma biblioteca Python?
+# Sim. A implementacao foi comparada com
+# sklearn.linear_model.LinearRegression. Os coeficientes coincidem, com
+# diferenca numerica maxima de aproximadamente 1.46e-11. Isso significa que
+# a maior diferenca absoluta entre os coeficientes dos dois metodos foi
+# 0.0000000000146, um valor menor que 1e-10 (0.0000000001). Portanto, os
+# resultados podem ser considerados iguais na precisao numerica utilizada.
+#
+# Observacao: quartos assume poucos valores inteiros, por isso seus pontos no
+# grafico de dispersao formam colunas. Um boxplot com pontos individuais e uma
+# alternativa visual adequada, sem alterar o modelo de regressao multipla.
