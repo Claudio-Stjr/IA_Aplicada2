@@ -1,7 +1,6 @@
 import math
 import matplotlib.pyplot as plt
 
-
 def correlacao(x, y):
     media_x = sum(x) / len(x)
     media_y = sum(y) / len(y)
@@ -14,10 +13,11 @@ def correlacao(x, y):
     soma_x = sum((xi - media_x) ** 2 for xi in x)
     soma_y = sum((yi - media_y) ** 2 for yi in y)
 
+    # não há tratamento de divisão por zero — presume variância positiva
     return numerador / math.sqrt(soma_x * soma_y)
 
-
-def regressao(x, y):
+# y = β0 + β1x
+def regressao(x, y): 
     media_x = sum(x) / len(x)
     media_y = sum(y) / len(y)
 
@@ -50,8 +50,9 @@ def demo():
         ),
         (
             "Dataset 4",
-            [10,     8,   13,    9,   11,   14,    6,    4,   12,     7,    5],
-            [7.46, 6.77, 12.72, 7.11, 7.81, 8.84, 6.08, 5.39, 8.15, 6.42, 5.73], # corrigido para 8.50 para que ele possa se ajustar na reta
+            [10,     8,      9,   11,   14,    6,    4,   12,     7,    5],
+            [7.46, 6.77, 7.11, 7.81, 8.84, 6.08, 5.39, 8.15, 6.42, 5.73], # corrigir para 8.50 para que ele possa se ajustar na reta
+                                                                                 # 12.72, outlier
         ),
     ]
 
@@ -59,6 +60,7 @@ def demo():
     axes = axes.ravel()
 
     for ax, (nome, x, y) in zip(axes, datasets):
+        # r e a reta podem ser influenciados por outliers e padrões não lineares
         r = correlacao(x, y)
         beta0, beta1 = regressao(x, y)
 
@@ -101,8 +103,10 @@ def demo():
 
 if __name__ == "__main__":
     demo()
-    
-    # questão 3
+
+
+    # questão 3 - Qual dos datasets não é apropriado para regressão linear? Justifique sua resposta.
+
     # O Dataset 2 não é apropriado para regressão linear, pois apresenta uma 
     # relação curvilínea entre as variáveis X e Y. A regressão linear utilizada no exercício 
     # pressupõe uma relação aproximadamente linear entre as variáveis, enquanto os dados do Dataset 2 
@@ -111,7 +115,9 @@ if __name__ == "__main__":
     # as variáveis antes de realizar a modelagem.
     
     
-    # questão 4
+    # questão 4 - Ao analisar o gráfico de dispersão e o resultado da regressão linear para o dataset 4, observa-se um problema. 
+    # O que deveria ser feito antes de ajustar o modelo de regressão? Justifique sua resposta.
+    
     # Antes de ajustar o modelo de regressão linear para o Dataset 4, deve-se identificar e analisar o
     # outlier presente nos dados, representado pelo ponto (13, 12.74). Esse ponto está distante dos demais
     # e pode exercer grande influência sobre a reta de regressão e sobre o coeficiente de correlação, 
