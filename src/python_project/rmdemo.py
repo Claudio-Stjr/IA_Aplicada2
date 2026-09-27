@@ -237,41 +237,39 @@ if __name__ == "__main__":
 	main()
 
 # A) Qual arquivo foi utilizado e qual e o formato dos dados?
-
 # R Foi utilizado data (1).csv. Cada linha possui, nesta ordem:
-# tamanho da casa, numero de quartos e preco. A notacao cientifica original,
-# como 3.999e+05, equivale a 399900 e foi normalizada no CSV.
-#
+# tamanho da casa, numero de quartos e preco. 
+
 # B) Qual a analise estatistica inicial da base?
 # O dataset possui 47 casas. A media dos precos e 340412.77, o menor
 # preco e 169900.00 e a casa mais cara possui 5 quartos.
-#
+
 # C) Como foram construidos X e y?
 # X possui uma coluna de 1 para o intercepto, uma coluna para o
 # tamanho e uma coluna para os quartos: X = [1, tamanho, quartos]. O vetor y
 # possui os precos das casas.
-#
+
 # D) Quais sao as correlacoes e regressoes simples?
 # A correlacao tamanho/preco e 0.854988 e a correlacao quartos/preco
 # e 0.442262. As regressões simples sao:
 # preco = 71270.57 + 134.53 * tamanho
 # preco = 110034.27 + 72669.73 * quartos
 # Os graficos 2D exibem essas regressões simples.
-#
+
 # E) Como foi calculada a regressao multipla?
 # A funcao regmultipla(X, y) calcula os coeficientes por minimos
 # quadrados. O resultado e beta = [89597.765961, 139.21063465,
 # -8737.91542019], na ordem [intercepto, tamanho, quartos].
-#
+
 # F) Como a regressao foi apresentada em tres dimensoes?
 # O grafico 3D mostra os pontos reais e o plano de regressao. A
 # equacao nao aparece no titulo para manter o grafico limpo; ela e impressa no
-# terminal e pode ser registrada no relatorio.
-#
+# terminal.
+
 # G) Onde aparecem os coeficientes de correlacao?
 # Os valores r(tamanho, preco) = 0.854988 e r(quartos, preco) =
 # 0.442262 aparecem no quadro do grafico 3D e tambem no terminal.
-#
+
 # H) Qual o preco estimado para tamanho 1650 e 3 quartos? O que
 # acontece ao variar o numero de quartos?
 # O preco estimado para 1650 e 3 quartos e 293081.57. Mantendo o
@@ -280,7 +278,7 @@ if __name__ == "__main__":
 # associa mais quartos a menor preco quando o tamanho e mantido constante.
 # Isso e uma associacao estatistica condicionada ao tamanho, nao uma regra
 # causal sobre o valor real das casas.
-#
+
 # I) O resultado foi comparado com uma biblioteca Python?
 # Sim. A implementacao foi comparada com
 # sklearn.linear_model.LinearRegression. Os coeficientes coincidem, com
@@ -288,7 +286,3 @@ if __name__ == "__main__":
 # a maior diferenca absoluta entre os coeficientes dos dois metodos foi
 # 0.0000000000146, um valor menor que 1e-10 (0.0000000001). Portanto, os
 # resultados podem ser considerados iguais na precisao numerica utilizada.
-#
-# Observacao: quartos assume poucos valores inteiros, por isso seus pontos no
-# grafico de dispersao formam colunas. Um boxplot com pontos individuais e uma
-# alternativa visual adequada, sem alterar o modelo de regressao multipla.

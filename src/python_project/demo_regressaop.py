@@ -7,7 +7,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import r2_score
 
 
 GRAUS_PRINCIPAIS = (1, 2, 3, 8)
@@ -39,12 +39,19 @@ def ajustar_e_avaliar(
 ) -> tuple[np.ndarray, float, float]:
 	"""Ajusta com polyfit e devolve coeficientes, EQM e R2."""
 	coeficientes = np.polyfit(x_treino, y_treino, grau)
-	previsoes = avaliar_polinomio(coeficientes, x_avaliacao)
-	return (
-		coeficientes,
-		mean_squared_error(y_avaliacao, previsoes),
-		r2_score(y_avaliacao, previsoes),
-	)
+	eqm, r2 = calcular_metricas(coeficientes, x_avaliacao, y_avaliacao)
+	return coeficientes, eqm, r2
+
+
+def calcular_metricas(
+	coeficientes: np.ndarray,
+	x: np.ndarray,
+	y: np.ndarray,
+) -> tuple[float, float]:
+	"""Avalia coeficientes ja ajustados sem reajustar o modelo."""
+	previsoes = avaliar_polinomio(coeficientes, x)
+	eqm = float(np.mean((y - previsoes) ** 2))
+	return eqm, r2_score(y, previsoes)
 
 
 def dividir_dados(
@@ -83,11 +90,12 @@ def imprimir_resultados(
 	print("grau | EQM treino | R2 treino | EQM teste | R2 teste")
 	resultados_teste = {}
 	for grau in graus:
-		_, eqm_treino, r2_treino = ajustar_e_avaliar(
-			x_treino, y_treino, x_treino, y_treino, grau
+		betas_treino = np.polyfit(x_treino, y_treino, grau)
+		eqm_treino, r2_treino = calcular_metricas(
+			betas_treino, x_treino, y_treino
 		)
-		_, eqm_teste, r2_teste = ajustar_e_avaliar(
-			x_treino, y_treino, x_teste, y_teste, grau
+		eqm_teste, r2_teste = calcular_metricas(
+			betas_treino, x_teste, y_teste
 		)
 		resultados_teste[grau] = (eqm_teste, r2_teste)
 		print(
@@ -289,58 +297,58 @@ if __name__ == "__main__":
 
 
 # A) Qual arquivo foi utilizado e qual e o formato dos dados?
-# Resposta: Foi utilizado o arquivo data_preg.csv. A primeira coluna contem os
+# Foi utilizado o arquivo data_preg.csv. A primeira coluna contem os
 # valores de x e a segunda coluna contem os valores de y. O arquivo possui duas
 # colunas numericas, sem cabecalho.
 
 # B) Como foi feito o grafico de dispersao?
-# Resposta: Os pares (x, y) foram representados com eixo x para a variavel
+# Os pares (x, y) foram representados com eixo x para a variavel
 # independente e eixo y para a variavel dependente. Os pontos azuis mostram as
 # observacoes do conjunto completo.
 
 # C) Como foi ajustada a regressao polinomial de grau 1?
-# Resposta: O ajuste foi feito com numpy.polyfit(x, y, 1). A curva foi
+# O ajuste foi feito com numpy.polyfit(x, y, 1). A curva foi
 # desenhada em vermelho. O vetor devolvido por polyfit vem em ordem decrescente
 # de potencia: [beta_1, beta_0], e nao [beta_0, beta_1].
 
 # D) Como foi ajustada e desenhada a regressao de grau 2?
-# Resposta: Os coeficientes foram obtidos com numpy.polyfit(x, y, 2). A funcao
+# Os coeficientes foram obtidos com numpy.polyfit(x, y, 2). A funcao
 # avaliar_polinomio calcula y = beta_0 + beta_1*x + beta_2*x**2 manualmente,
 # usando a regra de Horner, sem usar uma funcao pronta para avaliar a curva.
 # Ela e mostrada em verde.
 
 # E) Como foi desenhada a regressao polinomial de grau 3?
-# Resposta: O modelo foi ajustado com polyfit e avaliado pela mesma funcao
+# O modelo foi ajustado com polyfit e avaliado pela mesma funcao
 # manual avaliar_polinomio. A curva de grau 3 e mostrada em preto.
 
 # F) Como foi desenhada a regressao polinomial de grau 8?
-# Resposta: O modelo foi ajustado com polyfit e avaliado na grade de 600 pontos
+# O modelo foi ajustado com polyfit e avaliado na grade de 600 pontos
 # entre o menor e o maior valor de x. A curva de grau 8 e mostrada em amarelo.
 
 # G) Qual modelo teve o menor EQM nos dados completos?
-# Resposta: Nos dados completos, os EQMs foram aproximadamente: grau 1 =
+# Nos dados completos, os EQMs foram aproximadamente: grau 1 =
 # 0.26593426, grau 2 = 0.13852649, grau 3 = 0.07869725, grau 8 = 0.05870935
 # e grau 20 = 0.05196887. Portanto, o grau 20 foi o mais preciso nesse mesmo
 # conjunto usado para ajustar os modelos. Isso, sozinho, nao garante melhor
 # desempenho em dados novos.
 
 # H) Como os dados foram divididos em treinamento e teste?
-# Resposta: Os indices foram embaralhados com numpy.random.default_rng usando
+# Os indices foram embaralhados com numpy.random.default_rng usando
 # a semente 42. Foram usados 10% dos dados no teste e os 90% restantes no
 # treinamento. A semente torna a divisao reproduzivel.
 
 # I) Como foram refeitos os ajustes usando apenas os dados de treinamento?
-# Resposta: Para cada grau, numpy.polyfit foi aplicado somente a x_treino e
+# Para cada grau, numpy.polyfit foi aplicado somente a x_treino e
 # y_treino. As curvas resultantes foram desenhadas no segundo grafico, junto
 # com os pontos de treinamento e de teste.
 
 # J) Qual foi o EQM calculado somente nos dados de teste?
-# Resposta: Os EQMs de teste foram aproximadamente: grau 1 = 0.20784251,
+# Os EQMs de teste foram aproximadamente: grau 1 = 0.20784251,
 # grau 2 = 0.13499874, grau 3 = 0.10170281, grau 8 = 0.11767827 e grau 20 =
 # 76.24500972. O menor EQM de teste foi o do grau 3.
 
 # K) Quais foram os valores do coeficiente de determinacao R2?
-# Resposta: No treinamento, os valores de R2 foram aproximadamente 0.511623
+# No treinamento, os valores de R2 foram aproximadamente 0.511623
 # (grau 1), 0.750374 (grau 2), 0.861076 (grau 3), 0.893075 (grau 8) e
 # 0.908932 (grau 20). No teste, foram 0.565411, 0.717724, 0.787344, 0.753940
 # e -158.424819, respectivamente. O R2 mede a proporcao da variabilidade de y
@@ -348,13 +356,13 @@ if __name__ == "__main__":
 # no teste indica desempenho pior que essa previsao pela media.
 
 # L) Qual modelo foi mais preciso neste caso?
-# Resposta: Considerando a capacidade de generalizacao, o modelo de grau 3 foi
+# Considerando a capacidade de generalizacao, o modelo de grau 3 foi
 # o mais preciso: apresentou o menor EQM de teste e o maior R2 de teste entre
 # os modelos analisados. O grau 8 e o grau 20 reduziram mais o erro de treino,
 # mas tiveram desempenho inferior no teste.
 
 # M) O que acontece com o modelo de grau 20?
-# Resposta: A curva de grau 20 oscila fortemente, especialmente nas bordas do
+# A curva de grau 20 oscila fortemente, especialmente nas bordas do
 # intervalo. Ela consegue acompanhar o ruido dos dados de treinamento, por
 # isso apresenta EQM de treino baixo, mas produz previsoes muito ruins para os
 # dados de teste. Esse comportamento e overfitting: aumentar a complexidade
