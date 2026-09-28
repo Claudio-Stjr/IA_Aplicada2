@@ -1,3 +1,4 @@
+# Integrantes: Alexsandro Narducci, Claudio Strohaecker Júnior, Lucas Cãndido Belletti
 from __future__ import annotations
 
 import argparse
@@ -41,6 +42,7 @@ def regressao_simples(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 
 def _dataframe_from_array(values: np.ndarray) -> pd.DataFrame:
+	"""Converte uma matriz numerica nas colunas usadas pela atividade."""
 	values = pd.DataFrame(values).apply(pd.to_numeric, errors="coerce").dropna().to_numpy()
 	if values.ndim != 2 or values.shape[1] < 3:
 		raise ValueError("O arquivo deve conter pelo menos tres colunas numericas.")
@@ -221,6 +223,7 @@ def analisar(dados: pd.DataFrame, mostrar_graficos: bool = True,
 
 
 def main() -> None:
+	"""Le argumentos, carrega os dados e executa a analise da fase 2."""
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument("--data", help="caminho para data.csv ou data.mat")
 	parser.add_argument("--url", help="URL de um data.csv ou data.mat")

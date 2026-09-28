@@ -1,3 +1,4 @@
+# Integrantes: Alexsandro Narducci, Claudio Strohaecker Júnior, Lucas Cãndido Belletti
 """Demonstracao de regressao polinomial e overfitting."""
 
 from __future__ import annotations
@@ -263,6 +264,7 @@ def criar_graficos(
 
 
 def main() -> None:
+	"""Carrega os dados, compara os graus e apresenta metricas e graficos."""
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument(
 		"--data",
@@ -334,8 +336,8 @@ if __name__ == "__main__":
 
 # H) Como os dados foram divididos em treinamento e teste?
 # Os indices foram embaralhados com numpy.random.default_rng usando
-# a semente 42. Foram usados 10% dos dados no teste e os 90% restantes no
-# treinamento. A semente torna a divisao reproduzivel.
+# a semente 42. Foram usados 10% dos dados no teste(5 pontos) e os 90% restantes no
+# treinamento(48 pontos). A semente torna a divisao reproduzivel.
 
 # I) Como foram refeitos os ajustes usando apenas os dados de treinamento?
 # Para cada grau, numpy.polyfit foi aplicado somente a x_treino e

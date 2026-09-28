@@ -1,7 +1,9 @@
+# Integrantes: Alexsandro Narducci, Claudio Strohaecker Júnior, Lucas Cãndido Belletti
 import math
 import matplotlib.pyplot as plt
 
 def correlacao(x, y):
+    """Calcula a correlacao linear entre duas listas de valores."""
     media_x = sum(x) / len(x)
     media_y = sum(y) / len(y)
 
@@ -18,6 +20,7 @@ def correlacao(x, y):
 
 # y = β0 + β1x
 def regressao(x, y): 
+    """Calcula o intercepto e a inclinacao da reta de regressao."""
     media_x = sum(x) / len(x)
     media_y = sum(y) / len(y)
 
@@ -32,6 +35,7 @@ def regressao(x, y):
 
 
 def demo():
+    """Compara correlacao e regressao linear em quatro conjuntos de dados."""
     datasets = [
         (
             "Dataset 1",
